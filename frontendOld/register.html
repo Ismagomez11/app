@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro</title>
+</head>
+<body>
+
+  <h2>Crear cuenta</h2>
+
+  <input type="text" id="name" placeholder="Nombre">
+
+  <br><br>
+
+  <input type="text" id="lastname" placeholder="Apellidos">
+
+  <br><br>
+
+  <input type="text" id="nif" placeholder="NIF / DNI">
+
+  <br><br>
+
+  <input type="text" id="address" placeholder="Dirección">
+
+  <br><br>
+
+  <input type="text" id="city" placeholder="Ciudad">
+
+  <br><br>
+
+  <input type="text" id="postalCode" placeholder="Código postal">
+
+  <br><br>
+
+  <input type="tel" id="phone" placeholder="Teléfono">
+
+  <br><br>
+
+
+  <label>
+    <input
+      type="radio"
+      name="role"
+      value="tenant"
+      checked
+    >
+    Quiero alquilar garajes
+  </label>
+
+  <br>
+
+  <label>
+    <input
+      type="radio"
+      name="role"
+      value="owner"
+    >
+    Quiero publicar garajes
+  </label>
+
+  <br><br>
+
+  <input type="email" id="email" placeholder="Email">
+
+  <br><br>
+
+  <input type="password" id="password" placeholder="Contraseña">
+
+  <br><br>
+
+  <input
+    type="password"
+    id="confirmPassword"
+    placeholder="Confirmar contraseña"
+  >
+
+  <br><br>
+
+  <button onclick="register()">
+    Registrarse
+  </button>
+
+  <p id="msg"></p>
+
+  <script>
+
+    async function register() {
+
+      const name = document.getElementById("name").value;
+
+      const lastname = document.getElementById("lastname").value;
+
+      const nif = document.getElementById("nif").value;
+
+      const address = document.getElementById("address").value;
+
+      const city = document.getElementById("city").value;
+
+      const postalCode = document.getElementById("postalCode").value;
+
+      const phone = document.getElementById("phone").value;
+
+      const role = document.querySelector(
+        'input[name="role"]:checked'
+      ).value;
+
+      const email = document.getElementById("email").value;
+
+      const password = document.getElementById("password").value;
+
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      const msg = document.getElementById("msg");
+
+      // --------------------
+      // VALIDACIÓN PASSWORD
+      // --------------------
+
+      if (password !== confirmPassword) {
+
+        msg.style.color = "red";
+
+        msg.innerText = "Las passwords no coinciden";
+
+        return;
+      }
+
+      try {
+
+        const res = await fetch(
+          "http://localhost:3000/register",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+              name,
+              lastname,
+              nif,
+              address,
+              city,
+              postalCode,
+              phone,
+              role,
+              email,
+              password
+            })
+          }
+        );
+
+        const data = await res.json();
+
+        if (res.ok) {
+
+          msg.style.color = "green";
+
+          msg.innerText = "Usuario creado 🚀";
+
+          setTimeout(() => {
+
+            window.location.href = "login.html";
+
+          }, 1000);
+
+        } else {
+
+          msg.style.color = "red";
+
+          msg.innerText = data.message;
+        }
+
+      } catch (err) {
+
+        msg.style.color = "red";
+
+        msg.innerText = "Error de conexión";
+      }
+    }
+
+  </script>
+
+</body>
+</html>
