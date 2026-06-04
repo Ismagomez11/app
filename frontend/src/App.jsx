@@ -3,13 +3,31 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/register" element={<Register />} />
+
+      {/* públicas */}
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* protegida */}
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* fallback */}
+      <Route path="*" element={<NotFound />} />
+
     </Routes>
   );
 }
