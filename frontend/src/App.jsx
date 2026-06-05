@@ -4,7 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
-
+import PublishGarage from "./pages/PublishGarage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -21,6 +21,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/publicar-garaje"
+        element={
+          <ProtectedRoute>
+            <PublishGarage />
           </ProtectedRoute>
         }
       />
