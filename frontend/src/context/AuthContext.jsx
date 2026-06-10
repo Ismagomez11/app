@@ -11,16 +11,19 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
 
-    if (savedToken) {
-      setToken(savedToken);
-      fetchUser(savedToken);
-    } else {
+    if (!savedToken) {
       setLoading(false);
+      return;
     }
+
+    setToken(savedToken);
+    fetchUser(savedToken);
   }, []);
 
   // 🔥 Obtener usuario real desde backend
   async function fetchUser(token) {
+    if (!token) return;
+
     try {
       const res = await fetch("http://localhost:3000/profile", {
         headers: {
@@ -35,7 +38,7 @@ export function AuthProvider({ children }) {
       const data = await res.json();
       setUser(data);
     } catch (err) {
-      localStorage.removeItem("token");
+      // ❌ SOLO limpiar estado, NO tocar localStorage aquí
       setToken(null);
       setUser(null);
     } finally {
@@ -50,7 +53,7 @@ export function AuthProvider({ children }) {
     fetchUser(newToken);
   }
 
-  // 🚪 LOGOUT
+  // 🚪 LOGOUT (CLEAN + SAFE)
   function logout() {
     localStorage.removeItem("token");
     setToken(null);
