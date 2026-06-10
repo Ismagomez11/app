@@ -266,6 +266,76 @@ app.get("/profile", auth, async (req, res) => {
 });
 
 // --------------------
+// CREATE GARAGE
+// --------------------
+app.post("/garages", auth, async (req, res) => {
+
+  const {
+    title,
+    address,
+    city,
+    pricePerDay,
+    spaces,
+    availableFrom,
+    availableTo,
+    vehicleType,
+    parkingType,
+    description
+  } = req.body;
+
+  try {
+
+    const result = await pool.query(
+      `
+      INSERT INTO garages
+      (
+        user_id,
+        title,
+        address,
+        city,
+        price_per_day,
+        spaces,
+        available_from,
+        available_to,
+        vehicle_type,
+        parking_type,
+        description
+      )
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *
+      `,
+      [
+        req.user.id,
+        title,
+        address,
+        city,
+        pricePerDay,
+        spaces,
+        availableFrom,
+        availableTo,
+        vehicleType,
+        parkingType,
+        description
+      ]
+    );
+
+    res.status(201).json({
+      message: "Garaje publicado correctamente",
+      garage: result.rows[0]
+    });
+
+  } catch (err) {
+
+    console.error("❌ ERROR CREATE GARAGE:", err);
+
+    res.status(500).json({
+      message: "Error publicando garaje"
+    });
+  }
+});
+
+// --------------------
 // SERVER
 // --------------------
 app.listen(3000, () => {

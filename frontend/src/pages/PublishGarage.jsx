@@ -22,7 +22,7 @@ export default function PublishGarage() {
             [name]: value,
         });
         };
-        const handleSubmit = (e) => {
+        const handleSubmit = async (e) => {
           e.preventDefault();
           if (
               !formData.title ||
@@ -51,6 +51,32 @@ export default function PublishGarage() {
             if (Number(formData.spaces) <= 0) {
               alert("El número de plazas debe ser mayor que 0.");
               return;
+            }
+
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+              alert("Debes iniciar sesión para publicar un garaje.");
+              return;
+            }
+
+            try {
+              const res = await fetch("http://localhost:3000/garages", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(formData),
+              });
+
+              const data = await res.json();
+
+              console.log("Respuesta backend:", data);
+              alert("Garaje publicado correctamente");
+
+            } catch (err) {
+              console.error("Error enviando garaje:", err);
             }
           console.log("Datos del garaje:", formData);
         }
