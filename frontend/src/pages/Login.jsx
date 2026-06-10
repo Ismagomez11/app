@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
+  const auth = useAuth();
 
   function showToast(message, type = "success") {
     setToast({ message, type });
@@ -35,19 +37,19 @@ export default function Login() {
         return;
       }
 
-      // 🔴 VALIDACIÓN CRÍTICA
       if (!data.token) {
         showToast("El backend no devolvió token", "error");
         return;
       }
 
-      localStorage.setItem("token", data.token);
+      // 🔥 AUTH CONTEXT (NUEVO)
+      auth.login(data.token);
 
       showToast("Login correcto 🚀", "success");
 
       setTimeout(() => {
-        navigate("/");
-      }, 800);
+        navigate("/home");
+      }, 500);
 
     } catch (err) {
       console.error(err);
