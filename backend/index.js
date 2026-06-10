@@ -266,6 +266,49 @@ app.get("/profile", auth, async (req, res) => {
 });
 
 // --------------------
+// GET MY GARAGES
+// --------------------
+app.get("/my-garages", auth, async (req, res) => {
+
+  try {
+
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        title,
+        address,
+        city,
+        price_per_day,
+        spaces,
+        available_from,
+        available_to,
+        vehicle_type,
+        parking_type,
+        description,
+        created_at
+      FROM garages
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      `,
+      [req.user.id]
+    );
+
+    res.json({
+      garages: result.rows
+    });
+
+  } catch (err) {
+
+    console.error("❌ ERROR GET MY GARAGES:", err);
+
+    res.status(500).json({
+      message: "Error obteniendo garajes"
+    });
+  }
+});
+
+// --------------------
 // CREATE GARAGE
 // --------------------
 app.post("/garages", auth, async (req, res) => {
