@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 export default function MyGarages() {
   const [garages, setGarages] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
   useEffect(() => {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -91,9 +92,13 @@ export default function MyGarages() {
             {garage.price_per_day} €/día
             </p>
             <button
+              onClick={() => navigate(`/editar-garaje/${garage.id}`)}
+              className="mt-4 mr-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+              Editar
+            </button>
+            <button
               onClick={() => handleDelete(garage.id)}
-              className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-            >
+              className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
               Eliminar
             </button>
         </div>

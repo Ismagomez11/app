@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import PublishGarage from "./pages/PublishGarage";
 import MyGarages from "./pages/MyGarages";
+import EditGarage from "./pages/EditGarage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -39,6 +40,15 @@ export default function App() {
         element={
           <ProtectedRoute>
             <MyGarages />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/editar-garaje/:id"
+        element={
+          <ProtectedRoute>
+            <EditGarage />
           </ProtectedRoute>
         }
       />

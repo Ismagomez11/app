@@ -266,6 +266,57 @@ app.get("/profile", auth, async (req, res) => {
 });
 
 // --------------------
+// GET GARAGE BY ID
+// --------------------
+app.get("/garages/:id", auth, async (req, res) => {
+
+  const { id } = req.params;
+
+  try {
+
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        title,
+        address,
+        city,
+        price_per_day,
+        spaces,
+        available_from,
+        available_to,
+        vehicle_type,
+        parking_type,
+        description,
+        created_at
+      FROM garages
+      WHERE id = $1
+      AND user_id = $2
+      `,
+      [id, req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Garaje no encontrado o no autorizado"
+      });
+    }
+
+    res.json({
+      garage: result.rows[0]
+    });
+
+  } catch (err) {
+
+    console.error("❌ ERROR GET GARAGE BY ID:", err);
+
+    res.status(500).json({
+      message: "Error obteniendo garaje"
+    });
+  }
+});
+
+// --------------------
 // GET MY GARAGES
 // --------------------
 app.get("/my-garages", auth, async (req, res) => {
@@ -414,6 +465,83 @@ app.delete("/garages/:id", auth, async (req, res) => {
 
     res.status(500).json({
       message: "Error eliminando garaje"
+    });
+  }
+});
+
+// --------------------
+// UPDATE GARAGE
+// --------------------
+app.put("/garages/:id", auth, async (req, res) => {
+
+  const { id } = req.params;
+
+  const {
+    title,
+    address,
+    city,
+    price_per_day,
+    spaces,
+    available_from,
+    available_to,
+    vehicle_type,
+    parking_type,
+    description
+  } = req.body;
+
+  try {
+
+    const result = await pool.query(
+      `
+      UPDATE garages
+      SET
+        title = $1,
+        address = $2,
+        city = $3,
+        price_per_day = $4,
+        spaces = $5,
+        available_from = $6,
+        available_to = $7,
+        vehicle_type = $8,
+        parking_type = $9,
+        description = $10
+      WHERE id = $11
+      AND user_id = $12
+      RETURNING *
+      `,
+      [
+        title,
+        address,
+        city,
+        price_per_day,
+        spaces,
+        available_from,
+        available_to,
+        vehicle_type,
+        parking_type,
+        description,
+        id,
+        req.user.id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Garaje no encontrado o no autorizado"
+      });
+    }
+
+    res.json({
+      message: "Garaje actualizado correctamente",
+      garage: result.rows[0]
+    });
+
+  } catch (err) {
+
+    console.error("❌ ERROR UPDATE GARAGE:", err);
+
+    res.status(500).json({
+      message: "Error actualizando garaje"
     });
   }
 });
