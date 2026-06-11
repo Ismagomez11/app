@@ -10,6 +10,7 @@ import MyGarages from "./pages/MyGarages";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import RoleProtectedRoute from "./components/RoleProtectedRoute"; // 🔥 AÑADIDO
 
 import Navbar from "./components/Navbar";
 
@@ -42,7 +43,7 @@ export default function App() {
           }
         />
 
-        {/* 🔐 PRIVADAS */}
+        {/* 🔐 PRIVADA GENERAL */}
         <Route
           path="/home"
           element={
@@ -52,21 +53,22 @@ export default function App() {
           }
         />
 
+        {/* 🟠 SOLO ARRENDADOR */}
         <Route
           path="/publicar-garaje"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute role="arrendador">
               <PublishGarage />
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           }
         />
 
         <Route
           path="/mis-garajes"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute role="arrendador">
               <MyGarages />
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           }
         />
 

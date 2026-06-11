@@ -1,123 +1,100 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 
 export default function Register() {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const [loadingRegister, setLoadingRegister] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  function showToast(message, type = "success") {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }
-
-  async function register(e) {
+  async function handleRegister(e) {
     e.preventDefault();
-    setLoadingRegister(true);
+
+    if (loading) return; // 🔥 evita doble click
+
+    setLoading(true);
 
     const form = e.target;
 
-    const nif = form.nif.value.toUpperCase();
+    const email = form.email.value.trim().toLowerCase().replace(/\s/g, "");
     const password = form.password.value;
-    const confirmPassword = form.confirmPassword.value;
-
-    const nifRegex = /^[0-9]{8}[A-Z]$/;
-
-    if (!nifRegex.test(nif)) {
-      showToast("DNI inválido", "error");
-      setLoadingRegister(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      showToast("Password mínima 6 caracteres", "error");
-      setLoadingRegister(false);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      showToast("Las passwords no coinciden", "error");
-      setLoadingRegister(false);
-      return;
-    }
+    const role = form.role.value;
 
     try {
-      const res = await fetch("http://localhost:3000/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      // 1. CREAR USUARIO AUTH
+      const { data: authData, error: authError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+      if (authError) throw authError;
+
+      const user = authData.user;
+
+      if (!user) throw new Error("No se pudo crear el usuario");
+
+      // 2. PERFIL
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: user.id,
+          email,
+          role,
           name: form.name.value,
           lastname: form.lastname.value,
-          nif,
+          nif: form.nif.value,
           address: form.address.value,
           city: form.city.value,
-          postalCode: form.postalCode.value,
+          postalcode: form.postalcode.value,
           phone: form.phone.value,
-          role: form.role.value,
-          email: form.email.value,
-          password
-        })
-      });
+        });
 
-      const data = await res.json();
+      if (profileError) throw profileError;
 
-      if (res.ok) {
-        showToast("Usuario creado 🚀", "success");
-        form.reset();
-      } else {
-        showToast(data.message, "error");
-      }
+      alert("Usuario creado 🚀");
+
+      navigate("/login");
 
     } catch (err) {
-      showToast("Error de conexión", "error");
+      console.error(err);
+      alert(err.message);
     } finally {
-      setLoadingRegister(false);
+      setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <form
+        onSubmit={handleRegister}
+        className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-3"
+      >
+        <h1 className="text-2xl font-bold text-center">
+          Crear cuenta
+        </h1>
 
-      {toast && (
-        <div className={`fixed top-5 right-5 px-4 py-2 rounded text-white ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}`}>
-          {toast.message}
-        </div>
-      )}
+        <input className="w-full border p-2 rounded-lg" name="name" placeholder="Nombre" />
+        <input className="w-full border p-2 rounded-lg" name="lastname" placeholder="Apellidos" />
+        <input className="w-full border p-2 rounded-lg" name="nif" placeholder="NIF" />
+        <input className="w-full border p-2 rounded-lg" name="address" placeholder="Dirección" />
+        <input className="w-full border p-2 rounded-lg" name="city" placeholder="Ciudad" />
+        <input className="w-full border p-2 rounded-lg" name="postalcode" placeholder="Código postal" />
+        <input className="w-full border p-2 rounded-lg" name="phone" placeholder="Teléfono" />
 
-      <form onSubmit={register} className="bg-white p-8 rounded-xl shadow w-[500px] space-y-3">
+        <input className="w-full border p-2 rounded-lg" name="email" type="email" placeholder="Email" />
+        <input className="w-full border p-2 rounded-lg" name="password" type="password" placeholder="Password" />
 
-        <h1 className="text-2xl font-bold text-center">Registro</h1>
-
-        <input name="name" placeholder="Nombre" className="w-full border p-2 rounded" required />
-        <input name="lastname" placeholder="Apellidos" className="w-full border p-2 rounded" required />
-        <input name="nif" placeholder="NIF" className="w-full border p-2 rounded" required />
-        <input name="address" placeholder="Dirección" className="w-full border p-2 rounded" required />
-        <input name="city" placeholder="Ciudad" className="w-full border p-2 rounded" required />
-        <input name="postalCode" placeholder="Código postal" className="w-full border p-2 rounded" required />
-        <input name="phone" placeholder="Teléfono" className="w-full border p-2 rounded" required />
-
-        <div>
-          <label>
-            <input type="radio" name="role" value="tenant" defaultChecked />
-            Alquilar
-          </label>
-
-          <label className="ml-4">
-            <input type="radio" name="role" value="owner" />
-            Publicar
-          </label>
-        </div>
-
-        <input name="email" type="email" placeholder="Email" className="w-full border p-2 rounded" required />
-        <input name="password" type="password" placeholder="Password" className="w-full border p-2 rounded" required />
-        <input name="confirmPassword" type="password" placeholder="Confirmar password" className="w-full border p-2 rounded" required />
+        <select className="w-full border p-2 rounded-lg" name="role">
+          <option value="cliente">Cliente</option>
+          <option value="arrendador">Arrendador</option>
+        </select>
 
         <button
-          disabled={loadingRegister}
-          className="w-full bg-black text-white p-2 rounded"
+          disabled={loading}
+          className="w-full bg-black text-white p-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
         >
-          {loadingRegister ? "Registrando..." : "Registrarse"}
+          {loading ? "Creando..." : "Registrarse"}
         </button>
-
       </form>
     </div>
   );

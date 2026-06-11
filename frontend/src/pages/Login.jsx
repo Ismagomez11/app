@@ -1,82 +1,63 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { supabase } from "../supabaseClient";
 
 export default function Login() {
-  const [loadingLogin, setLoadingLogin] = useState(false);
-  const [toast, setToast] = useState(null);
-
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const auth = useAuth();
+  const { login } = useAuth();
 
-  function showToast(message, type = "success") {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }
-
-  async function login(e) {
+  async function handleLogin(e) {
     e.preventDefault();
-    setLoadingLogin(true);
+    setLoading(true);
 
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    try {
-      const res = await fetch("http://localhost:3000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      const data = await res.json();
-
-      console.log("LOGIN RESPONSE:", data);
-
-      if (!res.ok) {
-        showToast(data.message || "Error al iniciar sesión", "error");
-        return;
-      }
-
-      if (!data.token) {
-        showToast("El backend no devolvió token", "error");
-        return;
-      }
-
-      // 🔥 AUTH CONTEXT (NUEVO)
-      auth.login(data.token);
-
-      showToast("Login correcto 🚀", "success");
-
-      setTimeout(() => {
-        navigate("/home");
-      }, 500);
-
-    } catch (err) {
-      console.error(err);
-      showToast("Error de conexión con el servidor", "error");
-    } finally {
-      setLoadingLogin(false);
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+      return;
     }
+
+    const user = data.user;
+    const session = data.session;
+
+    // 🔥 traer role
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    login({
+      token: session.access_token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: profile?.role || "cliente",
+      },
+    });
+
+    setLoading(false);
+
+    // 🔥 IMPORTANTE: navegar después de actualizar estado
+    navigate("/home", { replace: true });
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-
-      {toast && (
-        <div
-          className={`fixed top-5 right-5 px-4 py-2 rounded text-white ${
-            toast.type === "success" ? "bg-green-600" : "bg-red-600"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
-
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <form
-        onSubmit={login}
-        className="bg-white p-8 rounded-xl shadow w-96 space-y-4"
+        onSubmit={handleLogin}
+        className="bg-white p-8 rounded-xl shadow-md w-96 space-y-4"
       >
-        <h1 className="text-2xl font-bold text-center">Login</h1>
+        <h1 className="text-2xl font-bold text-center">Iniciar sesión</h1>
 
         <input
           name="email"
@@ -95,10 +76,10 @@ export default function Login() {
         />
 
         <button
-          disabled={loadingLogin}
+          disabled={loading}
           className="w-full bg-black text-white p-2 rounded"
         >
-          {loadingLogin ? "Entrando..." : "Entrar"}
+          {loading ? "Entrando..." : "Entrar"}
         </button>
       </form>
     </div>

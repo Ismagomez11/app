@@ -1,23 +1,19 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function ProtectedRoute({ children, role }) {
+export default function RoleProtectedRoute({ children, role }) {
   const { user, token, loading } = useAuth();
 
-  // ⏳ mientras carga sesión
   if (loading) return null;
 
-  // 🔐 no logueado
   if (!token) {
     return <Navigate to="/" replace />;
   }
 
-  // 🧠 usuario aún no cargado pero token existe
   if (!user) {
     return null;
   }
 
-  // 🟠 control de roles (si se especifica)
   if (role && user.role !== role) {
     return <Navigate to="/home" replace />;
   }

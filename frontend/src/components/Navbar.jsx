@@ -6,12 +6,13 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { token, user, logout } = useAuth();
 
-  const [openAuth, setOpenAuth] = useState(false);
-  const [openUser, setOpenUser] = useState(false);
+  const [openMenu, setOpenMenu] = useState(false);
+
+  const role = user?.role;
 
   function handleLogout() {
     logout();
-    setOpenUser(false);
+    setOpenMenu(false);
     navigate("/");
   }
 
@@ -19,51 +20,43 @@ export default function Navbar() {
     <nav className="bg-black text-white px-6 py-4 flex justify-between items-center">
 
       {/* IZQUIERDA */}
-      <div className="flex gap-4 items-center">
-
-        {/* 🔥 FIX: navegación dinámica según login */}
-        <Link
-          to={token ? "/home" : "/"}
-          className="font-bold"
-          onClick={() => {
-            setOpenAuth(false);
-            setOpenUser(false);
-          }}
-        >
+      <div className="flex items-center gap-4">
+        <Link to={token ? "/home" : "/"} className="font-bold">
           Mi App
         </Link>
-
       </div>
 
       {/* DERECHA */}
       <div className="flex items-center gap-4">
 
-        {/* ICONO SI NO ESTÁ LOGUEADO */}
+        {/* =========================
+            🔓 NO LOGUEADO
+        ========================= */}
         {!token && (
           <div className="relative">
 
             <button
-              onClick={() => setOpenAuth(!openAuth)}
+              onClick={() => setOpenMenu(!openMenu)}
               className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center"
             >
               👤
             </button>
 
-            {openAuth && (
-              <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-lg z-50">
+            {openMenu && (
+              <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-lg z-50 flex flex-col">
 
                 <Link
                   to="/login"
-                  onClick={() => setOpenAuth(false)}
-                  className="block px-4 py-2 hover:bg-gray-100"
+                  onClick={() => setOpenMenu(false)}
+                  className="px-4 py-2 hover:bg-gray-100"
                 >
                   Iniciar sesión
                 </Link>
 
                 <Link
                   to="/register"
-                  onClick={() => setOpenAuth(false)}
-                  className="block px-4 py-2 hover:bg-gray-100"
+                  onClick={() => setOpenMenu(false)}
+                  className="px-4 py-2 hover:bg-gray-100"
                 >
                   Crear cuenta
                 </Link>
@@ -73,47 +66,67 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* ICONO SI ESTÁ LOGUEADO */}
+        {/* =========================
+            🔐 LOGUEADO
+        ========================= */}
         {token && (
           <div className="relative">
 
             <button
-              onClick={() => setOpenUser(!openUser)}
+              onClick={() => setOpenMenu(!openMenu)}
               className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center"
             >
               👤
             </button>
 
-            {openUser && (
-              <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg z-50">
+            {openMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg z-50 flex flex-col">
 
+                {/* PERFIL */}
                 <Link
                   to="/profile"
-                  onClick={() => setOpenUser(false)}
-                  className="block px-4 py-2 hover:bg-gray-100"
+                  onClick={() => setOpenMenu(false)}
+                  className="px-4 py-2 hover:bg-gray-100"
                 >
                   Mi perfil
                 </Link>
 
-                <Link
-                  to="/mis-garajes"
-                  onClick={() => setOpenUser(false)}
-                  className="block px-4 py-2 hover:bg-gray-100"
-                >
-                  Mis garajes
-                </Link>
+                {/* 🟠 ARRENDADOR */}
+                {role === "arrendador" && (
+                  <>
+                    <Link
+                      to="/mis-garajes"
+                      onClick={() => setOpenMenu(false)}
+                      className="px-4 py-2 hover:bg-gray-100"
+                    >
+                      Mis garajes
+                    </Link>
 
-                <Link
-                  to="/publicar-garaje"
-                  onClick={() => setOpenUser(false)}
-                  className="block px-4 py-2 hover:bg-gray-100"
-                >
-                  Publicar garaje
-                </Link>
+                    <Link
+                      to="/publicar-garaje"
+                      onClick={() => setOpenMenu(false)}
+                      className="px-4 py-2 hover:bg-gray-100"
+                    >
+                      Publicar garaje
+                    </Link>
+                  </>
+                )}
 
+                {/* 🟢 CLIENTE */}
+                {role === "cliente" && (
+                  <Link
+                    to="/home"
+                    onClick={() => setOpenMenu(false)}
+                    className="px-4 py-2 hover:bg-gray-100"
+                  >
+                    Buscar garajes
+                  </Link>
+                )}
+
+                {/* LOGOUT */}
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                  className="px-4 py-2 text-left text-red-500 hover:bg-gray-100"
                 >
                   Cerrar sesión
                 </button>

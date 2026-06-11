@@ -1,81 +1,95 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Cargar token al iniciar app
+  const navigate = useNavigate();
+
+  const buildUser = async (session) => {
+    if (!session) return null;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+
+    return {
+      id: session.user.id,
+      email: session.user.email,
+      role: profile?.role || "cliente",
+    };
+  };
+
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
+    let mounted = true;
 
-    if (!savedToken) {
-      setLoading(false);
-      return;
-    }
+    const initSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
 
-    setToken(savedToken);
-    fetchUser(savedToken);
-  }, []);
+      if (!mounted) return;
 
-  // 🔥 Obtener usuario real desde backend
-  async function fetchUser(token) {
-    if (!token) return;
+      if (session) {
+        const fullUser = await buildUser(session);
 
-    try {
-      const res = await fetch("http://localhost:3000/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error("Token inválido");
+        setUser(fullUser);
+        setToken(session.access_token);
+      } else {
+        setUser(null);
+        setToken(null);
       }
 
-      const data = await res.json();
-      setUser(data);
-    } catch (err) {
-      // ❌ SOLO limpiar estado, NO tocar localStorage aquí
-      setToken(null);
-      setUser(null);
-    } finally {
       setLoading(false);
-    }
-  }
+    };
 
-  // 🔑 LOGIN
-  function login(newToken) {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    fetchUser(newToken);
-  }
+    initSession();
 
-  // 🚪 LOGOUT (CLEAN + SAFE)
-  function logout() {
-    localStorage.removeItem("token");
-    setToken(null);
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+
+        if (session) {
+          const fullUser = await buildUser(session);
+
+          setUser(fullUser);
+          setToken(session.access_token);
+        } else {
+          setUser(null);
+          setToken(null);
+        }
+
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  async function logout() {
+    await supabase.auth.signOut();
+
     setUser(null);
+    setToken(null);
+
+    // 🔥 REDIRECCIÓN AL LANDING
+    navigate("/");
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        token,
-        user,
-        login,
-        logout,
-        loading,
-      }}
-    >
+    <AuthContext.Provider value={{ user, token, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// 🔥 hook
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);

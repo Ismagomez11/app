@@ -1,6 +1,76 @@
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../supabaseClient";
+
 export default function PublishGarage() {
-    const [formData, setFormData] = useState({
+  const { user, loading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    address: "",
+    city: "",
+    pricePerDay: "",
+    spaces: "",
+    availableFrom: "",
+    availableTo: "",
+    vehicleType: "",
+    parkingType: "",
+    description: "",
+    photos: null,
+  });
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    if (loading || submitting) return;
+
+    if (!user) {
+      alert("Debes iniciar sesión para publicar un garaje.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const { data, error } = await supabase.auth.getSession();
+
+      const session = data?.session;
+
+      if (error || !session?.access_token) {
+        alert("Sesión inválida. Inicia sesión otra vez.");
+        return;
+      }
+
+      const token = session.access_token;
+
+      const res = await fetch("http://localhost:3000/garages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+
+      console.log("STATUS:", res.status);
+      console.log("BACKEND:", result);
+
+      if (!res.ok) {
+        alert(result.message || "Error al publicar");
+        return;
+      }
+
+      alert("Garaje publicado correctamente 🚀");
+
+      setFormData({
         title: "",
         address: "",
         city: "",
@@ -12,263 +82,57 @@ export default function PublishGarage() {
         parkingType: "",
         description: "",
         photos: null,
-        });
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Error de red");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
-        };
-        const handleSubmit = async (e) => {
-          e.preventDefault();
-          if (
-              !formData.title ||
-              !formData.address ||
-              !formData.city ||
-              !formData.pricePerDay ||
-              !formData.spaces ||
-              !formData.availableFrom ||
-              !formData.availableTo ||
-              !formData.vehicleType ||
-              !formData.parkingType ||
-              !formData.description
-            ) {
-              alert("Por favor, completa todos los campos obligatorios.");
-              return;
-            }
-            if (formData.availableTo < formData.availableFrom) {
-              alert("La fecha final no puede ser anterior a la fecha inicial.");
-              return;
-            }
-            if (Number(formData.pricePerDay) <= 0) {
-              alert("El precio por día debe ser mayor que 0.");
-              return;
-            }
-
-            if (Number(formData.spaces) <= 0) {
-              alert("El número de plazas debe ser mayor que 0.");
-              return;
-            }
-
-            const token = localStorage.getItem("token");
-
-            if (!token) {
-              alert("Debes iniciar sesión para publicar un garaje.");
-              return;
-            }
-
-            try {
-              const res = await fetch("http://localhost:3000/garages", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(formData),
-              });
-
-              const data = await res.json();
-
-              console.log("Respuesta backend:", data);
-              alert("Garaje publicado correctamente");
-
-            } catch (err) {
-              console.error("Error enviando garaje:", err);
-            }
-          console.log("Datos del garaje:", formData);
-        }
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100 p-6">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-2xl">
         <h1 className="text-3xl font-bold mb-6 text-center">
           Publicar garaje
         </h1>
-        <p className="text-center text-gray-500">
-            {formData.title}
-        </p>
+
         <form className="space-y-4" onSubmit={handleSubmit}>
+          <input name="title" value={formData.title} onChange={handleChange} placeholder="Título" className="w-full border rounded p-2" />
+          <input name="address" value={formData.address} onChange={handleChange} placeholder="Dirección" className="w-full border rounded p-2" />
+          <input name="city" value={formData.city} onChange={handleChange} placeholder="Ciudad" className="w-full border rounded p-2" />
 
-          <div>
-            <label className="block mb-1 font-medium">
-              Título del anuncio
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full border rounded p-2"
-              placeholder="Ej: Plaza de garaje junto al aeropuerto"
-            />
-          </div>
+          <input type="number" name="pricePerDay" value={formData.pricePerDay} onChange={handleChange} placeholder="Precio por día" className="w-full border rounded p-2" />
 
-          <div>
-            <label className="block mb-1 font-medium">
-              Dirección
-            </label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              className="w-full border rounded p-2"
-              placeholder="Calle, número..."
-            />
-          </div>
+          <input type="number" name="spaces" value={formData.spaces} onChange={handleChange} placeholder="Plazas" className="w-full border rounded p-2" />
 
-          <div>
-            <label className="block mb-1 font-medium">
-              Ciudad
-            </label>
-            <input
-              type="text"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className="w-full border rounded p-2"
-              placeholder="Ej: Sevilla"
-            />
-          </div>
+          <input type="date" name="availableFrom" value={formData.availableFrom} onChange={handleChange} className="w-full border rounded p-2" />
+          <input type="date" name="availableTo" value={formData.availableTo} onChange={handleChange} className="w-full border rounded p-2" />
 
-          <div>
-            <label className="block mb-1 font-medium">
-              Precio por día (€)
-            </label>
-            <input
-              type="number"
-              name="pricePerDay"
-              value={formData.pricePerDay}
-              onChange={handleChange}
-              className="w-full border rounded p-2"
-              min="0"
-            />
-          </div>
+          <select name="vehicleType" value={formData.vehicleType} onChange={handleChange} className="w-full border rounded p-2">
+            <option value="">Tipo vehículo</option>
+            <option value="coche">Coche</option>
+            <option value="moto">Moto</option>
+            <option value="ambos">Ambos</option>
+          </select>
 
-          <div>
-            <label className="block mb-1 font-medium">
-              Número de plazas
-            </label>
-            <input
-              type="number"
-              name="spaces"
-              value={formData.spaces}
-              onChange={handleChange}
-              className="w-full border rounded p-2"
-              min="1"
-            />
-          </div>
+          <select name="parkingType" value={formData.parkingType} onChange={handleChange} className="w-full border rounded p-2">
+            <option value="">Tipo plaza</option>
+            <option value="garaje_privado">Privado</option>
+            <option value="garaje_comunitario">Comunitario</option>
+            <option value="parking_exterior">Exterior</option>
+            <option value="parking_publico">Público</option>
+          </select>
 
-          <div className="grid grid-cols-2 gap-4">
-
-            <div>
-              <label className="block mb-1 font-medium">
-                Disponible desde
-              </label>
-              <input
-                type="date"
-                name="availableFrom"
-                value={formData.availableFrom}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 font-medium">
-                Disponible hasta
-              </label>
-              <input
-                type="date"
-                name="availableTo"
-                value={formData.availableTo}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-              />
-            </div>
-
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">
-              Tipo de vehículo
-            </label>
-
-            <select
-                  name="vehicleType"
-                  value={formData.vehicleType}
-                  onChange={handleChange}
-                  className="w-full border rounded p-2"
-                >
-                  <option value="">Seleccione una opción</option>
-                  <option value="coche">Coche</option>
-                  <option value="moto">Moto</option>
-                  <option value="ambos">Ambos</option>
-                </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">
-                Tipo de plaza
-            </label>
-
-            <select
-              name="parkingType"
-              value={formData.parkingType}
-              onChange={handleChange}
-              className="w-full border rounded p-2"
-            >
-              <option value="">Seleccione una opción</option>
-              <option value="garaje_privado">
-                Garaje privado cubierto
-              </option>
-              <option value="garaje_comunitario">
-                Garaje comunitario
-              </option>
-              <option value="parking_exterior">
-                Parking exterior privado
-              </option>
-              <option value="parking_publico">
-                Parking público
-              </option>
-            </select>
-         </div>
-
-          <div>
-            <label className="block mb-1 font-medium">
-              Descripción
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full border rounded p-2"
-              rows="4"
-              placeholder="Describe el garaje..."
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 font-medium">
-              Fotos del garaje
-            </label>
-
-            <input
-              type="file"
-              multiple
-              className="w-full"
-            />
-          </div>
+          <textarea name="description" value={formData.description} onChange={handleChange} className="w-full border rounded p-2" rows="4" />
 
           <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            disabled={submitting}
+            className="w-full bg-blue-600 text-white py-2 rounded"
           >
-            Publicar garaje
+            {submitting ? "Publicando..." : "Publicar"}
           </button>
-
         </form>
       </div>
     </div>
