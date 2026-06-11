@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 export default function PublishGarage() {
     const [formData, setFormData] = useState({
         title: "",
@@ -13,6 +15,7 @@ export default function PublishGarage() {
         description: "",
         photos: null,
         });
+      const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -74,8 +77,9 @@ export default function PublishGarage() {
 
               console.log("Respuesta backend:", data);
               alert("Garaje publicado correctamente");
-
-            } catch (err) {
+              navigate("/mis-garajes");
+            } 
+            catch (err) {
               console.error("Error enviando garaje:", err);
             }
           console.log("Datos del garaje:", formData);
