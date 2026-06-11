@@ -94,7 +94,143 @@ export default function EditGarage() {
                 className="w-full border rounded p-2"
             />
             </div>
+           <div>
+            <label className="block mb-1 font-medium">
+                Dirección
+            </label>
+            <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+            />
+            </div>
 
+            <div>
+            <label className="block mb-1 font-medium">
+                Ciudad
+            </label>
+            <input
+                type="text"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+            />
+            </div>
+
+            <div>
+            <label className="block mb-1 font-medium">
+                Precio por día (€)
+            </label>
+            <input
+                type="number"
+                name="price_per_day"
+                value={formData.price_per_day}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+                min="0"
+            />
+            </div>
+
+            <div>
+            <label className="block mb-1 font-medium">
+                Número de plazas
+            </label>
+            <input
+                type="number"
+                name="spaces"
+                value={formData.spaces}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+                min="1"
+            />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+            <div>
+                <label className="block mb-1 font-medium">
+                Disponible desde
+                </label>
+                <input
+                type="date"
+                name="available_from"
+                value={formData.available_from}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+                />
+            </div>
+
+            <div>
+                <label className="block mb-1 font-medium">
+                Disponible hasta
+                </label>
+                <input
+                type="date"
+                name="available_to"
+                value={formData.available_to}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+                />
+            </div>
+            </div>
+
+            <div>
+            <label className="block mb-1 font-medium">
+                Tipo de vehículo
+            </label>
+
+            <select
+                name="vehicle_type"
+                value={formData.vehicle_type}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+            >
+                <option value="coche">Coche</option>
+                <option value="moto">Moto</option>
+                <option value="ambos">Ambos</option>
+            </select>
+            </div>
+
+            <div>
+            <label className="block mb-1 font-medium">
+                Tipo de plaza
+            </label>
+
+            <select
+                name="parking_type"
+                value={formData.parking_type}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+            >
+                <option value="garaje_privado">
+                Garaje privado cubierto
+                </option>
+                <option value="garaje_comunitario">
+                Garaje comunitario
+                </option>
+                <option value="parking_exterior">
+                Parking exterior privado
+                </option>
+                <option value="parking_publico">
+                Parking público
+                </option>
+            </select>
+            </div>
+
+            <div>
+            <label className="block mb-1 font-medium">
+                Descripción
+            </label>
+            <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                className="w-full border rounded p-2"
+                rows="4"
+            />
+            </div>
             <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
