@@ -379,6 +379,46 @@ app.post("/garages", auth, async (req, res) => {
 });
 
 // --------------------
+// DELETE GARAGE
+// --------------------
+app.delete("/garages/:id", auth, async (req, res) => {
+
+  const { id } = req.params;
+
+  try {
+
+    const result = await pool.query(
+      `
+      DELETE FROM garages
+      WHERE id = $1
+      AND user_id = $2
+      RETURNING *
+      `,
+      [id, req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Garaje no encontrado o no autorizado"
+      });
+    }
+
+    res.json({
+      message: "Garaje eliminado correctamente",
+      garage: result.rows[0]
+    });
+
+  } catch (err) {
+
+    console.error("❌ ERROR DELETE GARAGE:", err);
+
+    res.status(500).json({
+      message: "Error eliminando garaje"
+    });
+  }
+});
+
+// --------------------
 // SERVER
 // --------------------
 app.listen(3000, () => {

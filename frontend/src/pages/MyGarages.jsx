@@ -31,6 +31,42 @@ export default function MyGarages() {
     };
     getMyGarages();
   }, []);
+
+  const handleDelete = async (garageId) => {
+    const confirmDelete = window.confirm(
+      "¿Seguro que quieres eliminar este garaje?"
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`http://localhost:3000/garages/${garageId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Error eliminando garaje");
+        return;
+      }
+
+      setGarages(garages.filter((garage) => garage.id !== garageId));
+
+      alert("Garaje eliminado correctamente");
+    } catch (err) {
+      console.error("Error eliminando garaje:", err);
+      alert("Error conectando con el servidor");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-3xl font-bold mb-6 text-center">
@@ -54,6 +90,12 @@ export default function MyGarages() {
             <p className="mt-2 font-semibold">
             {garage.price_per_day} €/día
             </p>
+            <button
+              onClick={() => handleDelete(garage.id)}
+              className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+            >
+              Eliminar
+            </button>
         </div>
         ))}
     </div>
